@@ -45,16 +45,7 @@ void ds_test(istream &input)
       // }
       cout << "Load Map: " << total_time(start_load, end_load) << " us" << endl;
 
-    } CASE("scan") {
-      //cout << "Scan detected" << endl ;
-      // string option;
-      // toks >> option;
-      CASE_1("--")
-      {
-        //skip
-      }
-      CASE("random") /* Uniform */
-      {
+    } CASE("random_scan") { /* Uniform */
         //cout << "Random detected" << endl ;
         long int key;
         int scan_cnt, max_scan_val;
@@ -67,60 +58,60 @@ void ds_test(istream &input)
         {
           // key = rand() % max_scan_val;
           // cout << "while loop number : " << scan_cnt << endl;
-          // cout<< "searching for key : " << key << endl;
-          ds->find(rand() % max_scan_val);
+          //cout<< "searching for key : " << key << endl;
+          ds->lower_bound(rand() % max_scan_val);
           --scan_cnt;
 
         }
-      gettimeofday(&end_scan, NULL);
-      cout << "Scan Map time in Random Mode: " << total_time(start_scan, end_scan) << " us" << endl;
-      //cout << "Broke while loop as scan_cnt is 0" <<endl;
-    }
-    CASE("prob_scan") /* Heavy Hitters */
-    {
-      long int range_key,out_of_range_key;
-      //cout << "Scanning with probability" << endl;
-      int scan_cnt, max_scan_val,per_data,per_time;
-      toks >> scan_cnt >> max_scan_val >> per_data >> per_time;
-      //cout << scan_cnt << ","<< max_scan_val << "," << per_data << "," <<per_time << endl;
-      int key_range = floor((per_data/100.0)*max_scan_val); //DOUBT: key range is 3 but values needed is 0-2. rand%3 can give 3 also?
-      int scan_cnt_within_range = floor((per_time/100.0)*scan_cnt);
-      int scan_cnt_outof_range = scan_cnt - scan_cnt_within_range;
-      //cout << "key range :" << key_range <<", scan_cnt_within_range :" << scan_cnt_within_range << ", scan_cnt_outof_range :" << scan_cnt_outof_range << endl;
+        gettimeofday(&end_scan, NULL);
+        cout << "Scan Map time in Random Mode: " << total_time(start_scan, end_scan) << " us" << endl;
+        //cout << "Broke while loop as scan_cnt is 0" <<endl;
 
-      /* Scanning within Heavy Hitter range */
-      timeval start_scan, end_scan;      
-      gettimeofday(&start_scan, NULL);
-      while(scan_cnt_within_range != 0)
+      } CASE("scan_heavy_hitter") { /* Heavy Hitters */
+
+        long int range_key,out_of_range_key,key_to_scan;
+        //cout << "Scanning with probability" << endl;
+        int scan_cnt, max_scan_val,per_data,per_time;
+        toks >> scan_cnt >> max_scan_val >> per_data >> per_time;
+        //cout << scan_cnt << ","<< max_scan_val << "," << per_data << "," <<per_time << endl;
+       
+        int key_range = floor((per_data/100.0)*max_scan_val); //DOUBT: key range is 3 but values needed is 0-2. rand%3 can give 3 also?
+        int scan_cnt_within_range = floor((per_time/100.0)*scan_cnt);
+        // int scan_cnt_outof_range = scan_cnt - scan_cnt_within_range;
+        //cout << "key range :" << key_range <<", scan_cnt_within_range :" << scan_cnt_within_range << ", scan_cnt_outof_range :" << scan_cnt_outof_range << endl;
+      
+
+        /* Scanning within Heavy Hitter range */
+        timeval start_scan, end_scan;      
+        gettimeofday(&start_scan, NULL);
+        while(scan_cnt !=0)
         {
-          range_key = rand() % key_range;
-          //cout << "while loop number : " << scan_cnt_within_range << endl;
-          //cout<< "searching for key : " << range_key << endl;
-          ds->find(range_key);
-          --scan_cnt_within_range;
-
+          //cout << "Entering while scan count is : " << scan_cnt << endl;
+          if((rand()%100)< per_time && scan_cnt_within_range != 0)
+          {
+            //range_key = rand() % key_range;
+            //cout << "while loop number : " << scan_cnt_within_range << endl;
+            //cout<< "searching for heavy hitter key : " << range_key << endl;
+            ds->lower_bound(rand() % key_range);
+            --scan_cnt_within_range;  
+            --scan_cnt;
+          }
+          else
+          {
+            //out_of_range_key = rand() % max_scan_val;
+            //cout << "while loop number : " << scan_cnt_outof_range << endl;
+            //cout<< "searching for non heavy hitter key : " << out_of_range_key << endl;
+            ds->lower_bound(rand() % max_scan_val);
+              --scan_cnt;
+          }
         }
-        //cout << "left heavy hitter range" << endl;
-      /* Scanning out of Heavy Hitter range */
-      while(scan_cnt_outof_range != 0)
-        {
-          out_of_range_key = rand() % max_scan_val;
-          //cout << "while loop number : " << scan_cnt_outof_range << endl;
-          //cout<< "searching for key : " << out_of_range_key << endl;
-          ds->find(out_of_range_key);
-          --scan_cnt_outof_range;
+      
+        gettimeofday(&end_scan, NULL);
+        cout << "Scan Map time in Heavy Hitter Mode: " << total_time(start_scan, end_scan) << " us" << endl;
 
-        }
-      gettimeofday(&end_scan, NULL);
-      cout << "Scan Map time in Heavy Hitter Mode: " << total_time(start_scan, end_scan) << " us" << endl;
+      }
 
-    }
-    else {
-      cout << "No relevant scan option found" << line << endl;
-
-    }
-
-    } 
+     
     else {
       cout << "Skipping irrelevant operation: " << line << endl;
     }
